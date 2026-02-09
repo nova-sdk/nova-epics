@@ -4,11 +4,11 @@ nova-epics API
 
 .. _api:
 
--------
-Classes
--------
+-----
+Trame
+-----
 
-.. autofunction:: nova.epics.interface.get_epics_instance
+.. autofunction:: nova.epics.trame.get_epics_instance
 
-.. autoclass:: nova.epics.interface.EPICSInterface
+.. autoclass:: nova.epics.trame.TrameEPICS
     :members:
