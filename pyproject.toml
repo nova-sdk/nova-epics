@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-trame = ["nova-trame", "trame"]
+trame = ["nova-trame"]
 
 [project.urls]
 Changelog = "https://github.com/nova-sdk/nova-epics/blob/main/CHANGELOG.md"
