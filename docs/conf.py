@@ -4,7 +4,6 @@ import os
 import sys
 
 import tomli
-import trame  # noqa
 
 # Configuration file for the Sphinx documentation builder.
 #
