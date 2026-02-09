@@ -1,6 +1,6 @@
 [project]
 name = "nova-epics"
-version = "0.2.0"
+version = "0.2.1"
 description = "A Python Package for retrieving unprivileged instrument status information from EPICS for use in NOVA applications."
 authors = [
     { name = "John Duggan", email = "dugganjw@ornl.gov" }

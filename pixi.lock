@@ -1703,8 +1703,8 @@ packages:
   requires_python: '>=3.10,<4.0'
 - pypi: ./
   name: nova-epics
-  version: 0.2.0
-  sha256: f7124a934ca6644e0cbaa995640bbcf235658077fd98f6509fc908bae84f18fb
+  version: 0.2.1
+  sha256: 46e2061f6e87fa2b8e1c9f5f0094c716b892251cf322d7c25a60bf84497d0b9a
   requires_dist:
   - dpath
   - tomli
