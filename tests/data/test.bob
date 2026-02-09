@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>Test Widget</name>
+  <widget type="group" version="2.0.0">
+    <name>Test Data</name>
+    <widget type="checkbox" version="2.0.0">
+      <name>CheckBox</name>
+      <pv_name>$(S):Det:N1:Det4:XY:ROI:0:Use</pv_name>
+      <label>autoscale</label>
+      <x>266</x>
+      <y>326</y>
+    </widget>
+  </widget>
+</display>
