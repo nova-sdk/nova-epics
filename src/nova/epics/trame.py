@@ -20,7 +20,11 @@ from nova.trame.view.layouts import VBoxLayout
 
 
 class TrameEPICS(EPICSInterface):
-    """Trame integration for EPICS instrument status retrieval."""
+    """Singleton class for connecting to an EPICS Tomcat server.
+
+    You should not instantiate this class directly since it is intended to be used as a singleton. Instead, please call
+    get_epics_instance().
+    """
 
     def _flatten(self, entry: Any) -> Generator[Any, None, None]:
         if isinstance(entry, List):
@@ -96,6 +100,7 @@ class TrameEPICS(EPICSInterface):
             """)
 
     def serve_javascript(self) -> None:
+        """Serves the necessary JavaScript files. This is called by __init__."""
         js_path = (Path(__file__).parent / "assets" / "epics").resolve()
         self.server = get_server(None, client_type="vue3")
         self.server.enable_module(
@@ -111,7 +116,6 @@ class TrameEPICS(EPICSInterface):
         )
 
     def __init__(self) -> None:
-        """Serves the necessary JavaScript files. This is called by __init__."""
         self.serve_javascript()
 
 

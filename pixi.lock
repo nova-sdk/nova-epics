@@ -1703,13 +1703,14 @@ packages:
   requires_python: '>=3.10,<4.0'
 - pypi: ./
   name: nova-epics
-  version: 0.2.0
-  sha256: f7124a934ca6644e0cbaa995640bbcf235658077fd98f6509fc908bae84f18fb
+  version: 0.2.1
+  sha256: 3a7905bad59bdf6c4ebb59636141360b95cb95ed8896e76909596c2731bbbddb
   requires_dist:
   - dpath
   - tomli
   - xmltodict
   - nova-trame ; extra == 'trame'
+  - trame ; extra == 'trame'
   requires_python: '>=3.10,<3.14'
 - pypi: https://files.pythonhosted.org/packages/7d/b3/e40ecbd3ef8d3ad505b9e9af5f4899f00bb177e7832bfdb458830643c851/nova_mvvm-0.16.0-py3-none-any.whl
   name: nova-mvvm
