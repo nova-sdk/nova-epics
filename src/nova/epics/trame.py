@@ -40,6 +40,17 @@ class TrameEPICS(EPICSInterface):
         return full_name
 
     def connect(self, xml: str, macros: str, detector_count: int) -> None:
+        """Connects to the EPICS Tomcat server and pulls initial PV values.
+
+        Parameters
+        ----------
+        xml : str
+            The contents of the XML config file for the instrument to pull PVs for.
+        macros : str
+            The macros string for the instrument.
+        detector_count : int
+            The number of detectors used by this instrument.
+        """
         self.server.state["epics"] = {"pv_data": {}}
         bob_dict = parse(xml)
 
@@ -100,6 +111,7 @@ class TrameEPICS(EPICSInterface):
         )
 
     def __init__(self) -> None:
+        """Serves the necessary JavaScript files. This is called by __init__."""
         self.serve_javascript()
 
 
@@ -107,6 +119,7 @@ instance = TrameEPICS()
 
 
 def get_epics_instance() -> TrameEPICS:
+    """Retrieves an instance of the TrameEPICS singleton class."""
     return instance
 
 
