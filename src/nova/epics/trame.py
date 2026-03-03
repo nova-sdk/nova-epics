@@ -2,12 +2,15 @@
 
 import json
 from html import unescape
+from math import ceil
 from pathlib import Path
 from re import findall
-from typing import Any, Dict, Generator, List
+from typing import Any, Dict, Generator, List, Optional
 from urllib.parse import unquote_plus
 
 import dpath
+import numpy as np
+import plotly.graph_objects as go
 from trame.app import get_server
 from trame.widgets import client, plotly
 from trame.widgets import vuetify3 as vuetify
@@ -61,7 +64,11 @@ class TrameEPICS(EPICSInterface):
         decoded_macros = unescape(unquote_plus(macros))
         macro_dict = json.loads(decoded_macros)
 
-        pv_list = self._flatten(dpath.values(bob_dict, "**/pv_name"))
+        pv_list = (
+            list(self._flatten(dpath.values(bob_dict, "**/pv_name")))
+            + list(self._flatten(dpath.values(bob_dict, "**/x_pv")))
+            + list(self._flatten(dpath.values(bob_dict, "**/y_pv")))
+        )
         pv_names = {self._replace_macros(pv_name, macro_dict) for pv_name in pv_list}
         if "" in pv_names:
             pv_names.remove("")
@@ -173,24 +180,78 @@ class PVInput(InputField):
 class PVPlot:
     """Creates a plotly-based figure for the PV data object."""
 
-    def __init__(self, pv_name: str, **kwargs: Any) -> None:
-        instrument_id = pv_name.split(":")[0]
+    def __init__(self, pv_name: str, data_width: Optional[int] = None, **kwargs: Any) -> None:
+        self.server = get_server(None, client_type="vue3")
+        self.pv_name = pv_name
+        self.data_width = data_width
+
+        self.display_type = "heatmap" if data_width is not None else "line"
+        self.instrument_id = pv_name.split(":")[0]
 
         with VBoxLayout(
             v_if=(
-                f"'{instrument_id}:Det:Neutrons' in epics.pv_data && "
-                f"epics.pv_data['{instrument_id}:Det:Neutrons'] > 0 && "
+                f"'{self.instrument_id}:Det:Neutrons' in epics.pv_data && "
+                f"epics.pv_data['{self.instrument_id}:Det:Neutrons'] > 0 && "
                 f"'{pv_name}' in epics.pv_data && "
                 f"epics.pv_data['{pv_name}']"
             ),
             classes="border-md position-relative",
             stretch=True,
         ):
-            # TODO: need to inject go.Figure here with test data from Zhongcan.
-            plotly.Figure(**kwargs)
+            figure = plotly.Figure(**kwargs)
             DisconnectedAlert()
+
+            @self.server.state.change("epics")
+            def on_pv_change(*args: Any, **kwargs: Any) -> None:
+                figure.update(self.render_figure())
+
         with VBoxLayout(
             v_else=True, classes="border-md position-relative", halign="center", valign="center", stretch=True
         ):
             vuetify.VListSubheader("No Data")
             DisconnectedAlert()
+
+    def render_figure(self) -> go.Figure:
+        match self.display_type:
+            case "heatmap":
+                trace = self.render_heatmap()
+            case "line":
+                trace = self.render_linechart()
+
+        figure = go.Figure(trace)
+        figure.update_layout(margin={"b": 0, "l": 0, "r": 0, "t": 0}, xaxis_visible=False, yaxis_visible=False)
+
+        return figure
+
+    def render_heatmap(self) -> go.Heatmap:
+        if self.data_width is None:
+            return
+
+        try:
+            state = self.server.state
+            data = np.array(state.epics["pv_data"][self.pv_name])
+        except Exception:
+            return
+
+        rows = ceil(len(data) / self.data_width)
+        cols = self.data_width
+        transformed_data = np.resize(data, (rows, cols)).tolist()
+
+        return go.Heatmap(
+            x=list(range(rows)),
+            y=list(reversed(range(cols))),
+            z=transformed_data,
+            colorscale="Viridis",
+            showscale=False,
+            zmin=min(data),
+            zmax=max(data),
+        )
+
+    def render_linechart(self) -> go.Scatter:
+        try:
+            state = self.server.state
+            data = np.array(state.epics["pv_data"][self.pv_name])
+        except Exception:
+            return
+
+        return go.Scatter(x=list(range(len(data))), y=data, mode="lines")
