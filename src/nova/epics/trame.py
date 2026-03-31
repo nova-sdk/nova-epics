@@ -180,9 +180,12 @@ class PVInput(InputField):
 class PVPlot:
     """Creates a plotly-based figure for the PV data object."""
 
-    def __init__(self, pv_name: str, data_width: Optional[int] = None, **kwargs: Any) -> None:
+    def __init__(
+        self, pv_name: str, scaling_pv_name: str = "", data_width: Optional[int] = None, **kwargs: Any
+    ) -> None:
         self.server = get_server(None, client_type="vue3")
         self.pv_name = pv_name
+        self.scaling_pv_name = scaling_pv_name
         self.data_width = data_width
 
         self.display_type = "heatmap" if data_width is not None else "line"
@@ -230,6 +233,7 @@ class PVPlot:
         try:
             state = self.server.state
             data = np.array(state.epics["pv_data"][self.pv_name])
+            max_value = state.epics["pv_data"].get(self.scaling_pv_name, max(data))
         except Exception:
             return
 
@@ -244,7 +248,7 @@ class PVPlot:
             colorscale="Viridis",
             showscale=False,
             zmin=min(data),
-            zmax=max(data),
+            zmax=max_value,
         )
 
     def render_linechart(self) -> go.Scatter:
