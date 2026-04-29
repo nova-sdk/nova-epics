@@ -94,6 +94,8 @@ class TrameEPICS(EPICSInterface):
                             }} else {{
                                 data.value = data.text;
                             }}
+                        }} else if (data.vtype === "VDouble") {{
+                            data.value = +data.value.toFixed(3);
                         }}
                         window.trame.state.state.epics.pv_data["{pv}"] = data.value;
                         window.trame.state.dirty("epics");
