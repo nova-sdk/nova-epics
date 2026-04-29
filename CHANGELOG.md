@@ -1,3 +1,11 @@
+### nova-epics, 0.3.1
+
+* Round floats to improve readability of PVInput (thanks to John Duggan).
+
+### nova-epics, 0.3.0
+
+* Make colorscales for heatmaps better match status page examples (thanks to John Duggan).
+
 ### nova-epics, 0.2.1
 
 * Fix readthedocs build (thanks to John Duggan).
