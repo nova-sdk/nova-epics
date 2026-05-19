@@ -10,6 +10,8 @@ class EPICSInterface:
     get_epics_instance().
     """
 
+    test_mode: bool = False
+
     @abstractmethod
     def connect(self, xml: str, macros: str, detector_count: int) -> None:
         """Connects to the EPICS Tomcat server and pulls initial PV values.
@@ -29,6 +31,11 @@ class EPICSInterface:
     def serve_javascript(self) -> None:
         """Serves the necessary JavaScript files. This is called by __init__."""
         raise NotImplementedError("serve_javascript() must be implemented in a subclass")
+
+
+def enable_test_stream() -> None:
+    """Turns on a test data stream for user interface testing when the EPICS server is not providing data."""
+    raise NotImplementedError("enable_test_stream() must be implemented per-framework")
 
 
 def get_epics_instance() -> EPICSInterface:

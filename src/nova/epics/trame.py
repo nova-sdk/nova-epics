@@ -5,8 +5,9 @@ from html import unescape
 from math import ceil
 from pathlib import Path
 from re import findall
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Dict, Generator, List, Optional, Set
 from urllib.parse import unquote_plus
+from warnings import warn
 
 import dpath
 import numpy as np
@@ -28,6 +29,8 @@ class TrameEPICS(EPICSInterface):
     You should not instantiate this class directly since it is intended to be used as a singleton. Instead, please call
     get_epics_instance().
     """
+
+    test_mode: bool = False
 
     def _flatten(self, entry: Any) -> Generator[Any, None, None]:
         if isinstance(entry, List):
@@ -78,6 +81,12 @@ class TrameEPICS(EPICSInterface):
                 for index in range(1, detector_count + 1):
                     pv_names.add(pv.replace("$(DET)", str(index)))
 
+        if self.test_mode:
+            self.connect_test(pv_names)
+        else:
+            self.connect_live(pv_names)
+
+    def connect_live(self, pv_names: Set[str]) -> None:
         client.Script(
             """window.dbwr = new DisplayBuilderWebRuntime("wss://status.sns.ornl.gov/pvws/pv");"""
             """window.dbwr.pvws.open();"""
@@ -108,6 +117,16 @@ class TrameEPICS(EPICSInterface):
                 }}, 1000);
             """)
 
+    def connect_test(self, pv_names: Set[str]) -> None:
+        for pv in pv_names:
+            client.Script(f"""
+                window.setInterval(() => {{
+                    window.trame.state.state.epics.pv_data["{pv}"] = Math.random().toFixed(3);
+                    window.trame.state.dirty("epics");
+                    window.trame.state.flush();
+                }}, 1000);
+            """)
+
     def serve_javascript(self) -> None:
         """Serves the necessary JavaScript files. This is called by __init__."""
         js_path = (Path(__file__).parent / "assets" / "epics").resolve()
@@ -131,6 +150,17 @@ class TrameEPICS(EPICSInterface):
 instance = TrameEPICS()
 
 
+def enable_test_stream() -> None:
+    warn(
+        (
+            "You have enabled a test data stream. This will override the ability to acquire live data and should not "
+            "be used in production."
+        ),
+        stacklevel=1,
+    )
+    instance.test_mode = True
+
+
 def get_epics_instance() -> TrameEPICS:
     """Retrieves an instance of the TrameEPICS singleton class."""
     return instance
@@ -142,8 +172,11 @@ class DisconnectedAlert:
     def __init__(self) -> None:
         with VBoxLayout(
             v_if=(
-                "window?.dbwr?.pvws?.socket === undefined ||"
-                "window.dbwr.pvws.socket.readyState !== window.WebSocket.OPEN"
+                f"!{str(instance.test_mode).lower()} &&"
+                "("
+                "  window?.dbwr?.pvws?.socket === undefined ||"
+                "  window.dbwr.pvws.socket.readyState !== window.WebSocket.OPEN"
+                ")"
             ),
             classes="position-absolute h-100 w-100",
             halign="center",
