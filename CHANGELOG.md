@@ -1,3 +1,7 @@
+### nova-epics, 0.4.0
+
+* Added enable_test_stream for local development when beamlines are off (thanks to John Duggan).
+
 ### nova-epics, 0.3.1
 
 * Round floats to improve readability of PVInput (thanks to John Duggan).
