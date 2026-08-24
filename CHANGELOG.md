@@ -1,3 +1,7 @@
+### nova-epics, 0.5.0
+
+* Add throttle parameter to `connect()` to address responsiveness issues when EPICS is streaming data too fast (thanks to John Duggan).
+
 ### nova-epics, 0.4.0
 
 * Added enable_test_stream for local development when beamlines are off (thanks to John Duggan).

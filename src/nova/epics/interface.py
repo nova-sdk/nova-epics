@@ -13,7 +13,7 @@ class EPICSInterface:
     test_mode: bool = False
 
     @abstractmethod
-    def connect(self, xml: str, macros: str, detector_count: int) -> None:
+    def connect(self, xml: str, macros: str, detector_count: int, throttle: int = 2500) -> None:
         """Connects to the EPICS Tomcat server and pulls initial PV values.
 
         Parameters
@@ -24,6 +24,8 @@ class EPICSInterface:
             The macros string for the instrument.
         detector_count : int
             The number of detectors used by this instrument.
+        throttle : int
+            The number of milliseconds to throttle UI updates to.
         """
         raise NotImplementedError("connect() must be implemented in a subclass")
 

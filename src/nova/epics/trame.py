@@ -49,7 +49,7 @@ class TrameEPICS(EPICSInterface):
 
         return full_name
 
-    def connect(self, xml: str, macros: str, detector_count: int) -> None:
+    def connect(self, xml: str, macros: str, detector_count: int, throttle: int = 2500) -> None:
         """Connects to the EPICS Tomcat server and pulls initial PV values.
 
         Parameters
@@ -60,6 +60,8 @@ class TrameEPICS(EPICSInterface):
             The macros string for the instrument.
         detector_count : int
             The number of detectors used by this instrument.
+        throttle : int
+            The number of milliseconds to throttle UI updates to.
         """
         self.server.state["epics"] = {"pv_data": {}}
         bob_dict = parse(xml)
@@ -82,11 +84,11 @@ class TrameEPICS(EPICSInterface):
                     pv_names.add(pv.replace("$(DET)", str(index)))
 
         if self.test_mode:
-            self.connect_test(pv_names)
+            self.connect_test(pv_names, throttle)
         else:
-            self.connect_live(pv_names)
+            self.connect_live(pv_names, throttle)
 
-    def connect_live(self, pv_names: Set[str]) -> None:
+    def connect_live(self, pv_names: Set[str], throttle: int) -> None:
         client.Script(
             """window.dbwr = new DisplayBuilderWebRuntime("wss://status.sns.ornl.gov/pvws/pv");"""
             """window.dbwr.pvws.open();"""
@@ -107,8 +109,10 @@ class TrameEPICS(EPICSInterface):
                             data.value = +data.value.toFixed(3);
                         }}
                         window.trame.state.state.epics.pv_data["{pv}"] = data.value;
-                        window.trame.state.dirty("epics");
-                        window.trame.state.flush();
+                        window.delay_manager.throttle("epics-flush", () => {{
+                            window.trame.state.dirty("epics");
+                            window.trame.state.flush();
+                        }}, {str(throttle)});
                     }}
                 }});
 
@@ -117,14 +121,14 @@ class TrameEPICS(EPICSInterface):
                 }}, 1000);
             """)
 
-    def connect_test(self, pv_names: Set[str]) -> None:
+    def connect_test(self, pv_names: Set[str], throttle: int) -> None:
         for pv in pv_names:
             client.Script(f"""
                 window.setInterval(() => {{
                     window.trame.state.state.epics.pv_data["{pv}"] = Math.random().toFixed(3);
                     window.trame.state.dirty("epics");
                     window.trame.state.flush();
-                }}, 1000);
+                }}, {str(throttle)});
             """)
 
     def serve_javascript(self) -> None:
